@@ -24,8 +24,10 @@ func NewRouter(d Deps) http.Handler {
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	// Liveness (não depende de DB)
-	r.Get("/health", d.Accounts.Health)
-	r.Get("/healthz", d.Accounts.Health)
+	if d.Accounts != nil {
+		r.Get("/health", d.Accounts.Health)
+		r.Get("/healthz", d.Accounts.Health)
+	}
 
 	// Readiness (depende de DB)
 	if d.Ready != nil {
@@ -33,8 +35,13 @@ func NewRouter(d Deps) http.Handler {
 	}
 
 	// Funcionalidade
-	r.Post("/accounts", d.Accounts.CreateAccount)
-	// r.Post("/transactions", d.Tx.CreateTransaction)
+	if d.Accounts != nil {
+		r.Post("/accounts", d.Accounts.CreateAccount)
+	}
+
+	if d.Tx != nil {
+		r.Post("/transactions", d.Tx.CreateTransaction)
+	}
 
 	return r
 }
