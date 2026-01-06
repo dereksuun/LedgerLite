@@ -13,14 +13,13 @@ type ReadyzHandler struct {
 }
 
 func (h *ReadyzHandler) Ready(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 
 	if err := h.DB.Ping(ctx); err != nil {
-		http.Error(w, "db not ready", http.StatusServiceUnavailable)
+		http.Error(w, "NOT READY", http.StatusServiceUnavailable)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte("ready"))
+	w.WriteHeader(http.StatusNoContent) // 204
 }
