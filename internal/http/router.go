@@ -10,6 +10,7 @@ import (
 type Deps struct {
 	Accounts *AccountsHandler
 	Tx       *TransactionsHandler
+	Ready    *ReadyzHandler
 }
 
 func NewRouter(d Deps) http.Handler {
@@ -20,8 +21,9 @@ func NewRouter(d Deps) http.Handler {
 	r.Use(middleware.Recoverer)
 
 	r.Get("/health", d.Accounts.Health)
+	r.Get("/readyz", d.Ready.Ready)
 
-	// por enquanto só health. depois a gente habilita /accounts e /transactions.
+	// por enquanto só health e readyz. depois habilita:
 	// r.Post("/accounts", d.Accounts.CreateAccount)
 	// r.Post("/transactions", d.Tx.CreateTransaction)
 

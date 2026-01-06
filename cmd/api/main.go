@@ -26,11 +26,13 @@ func main() {
 	defer pool.Close()
 
 	accounts := &httpapi.AccountsHandler{DB: pool}
+	txHandler := &httpapi.TransactionsHandler{DB: pool}
+	ready := &httpapi.ReadyzHandler{DB: pool} // <- aqui estava o bug (era DB: db)
 
-	// Router (por enquanto só health; depois a gente adiciona /accounts etc)
 	router := httpapi.NewRouter(httpapi.Deps{
 		Accounts: accounts,
-		Tx:       nil,
+		Tx:       txHandler,
+		Ready:    ready,
 	})
 
 	srv := &http.Server{
