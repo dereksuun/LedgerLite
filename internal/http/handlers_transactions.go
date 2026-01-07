@@ -74,7 +74,6 @@ func (h *TransactionsHandler) CreateTransaction(w http.ResponseWriter, r *http.R
 
 	// Transação no banco
 	err = withTx(ctx, h.DB, func(tx pgx.Tx) error {
-		// Lock nas duas contas
 		type acc struct {
 			id      uuid.UUID
 			balance int64
@@ -116,16 +115,12 @@ func (h *TransactionsHandler) CreateTransaction(w http.ResponseWriter, r *http.R
 			return errCurrencyMismatch
 		}
 
-		if fromAcc.balance < req.AmountCents {
-			return errInsufficientFunds
-		}
-
-		ct, err := tx.Exec(ctx,
-			`UPDATE accounts
+		// Debita com condição (bom!)
+		ct, err := tx.Exec(ctx, `
+			UPDATE accounts
 			SET balance_cents = balance_cents - $1
-			WHERE id = $2 AND balance_cents >= $1`,
-			req.AmountCents, fromID,
-		)
+			WHERE id = $2 AND balance_cents >= $1
+		`, req.AmountCents, fromID)
 		if err != nil {
 			return err
 		}
@@ -133,22 +128,29 @@ func (h *TransactionsHandler) CreateTransaction(w http.ResponseWriter, r *http.R
 			return errInsufficientFunds
 		}
 
+		// Credita
 		if _, err := tx.Exec(ctx, `
-		UPDATE accounts
-		SET balance_cents = balance_cents + $1
-		WHERE id = $2
+			UPDATE accounts
+			SET balance_cents = balance_cents + $1
+			WHERE id = $2
 		`, req.AmountCents, toID); err != nil {
 			return err
 		}
 
-		// Registra transação
-		var tid uuid.UUID
+		// Registra transação (tabela exige id e idempotency_key)
+		tid := uuid.New()
+
+		idemKey := strings.TrimSpace(r.Header.Get("Idempotency-Key"))
+		if idemKey == "" {
+			idemKey = uuid.NewString()
+		}
+
 		var createdAt time.Time
 		err = tx.QueryRow(ctx, `
-			INSERT INTO transactions (from_account_id, to_account_id, amount_cents)
-			VALUES ($1, $2, $3)
-			RETURNING id, created_at
-		`, fromID, toID, req.AmountCents).Scan(&tid, &createdAt)
+			INSERT INTO transactions (id, idempotency_key, from_account_id, to_account_id, amount_cents)
+			VALUES ($1, $2, $3, $4, $5)
+			RETURNING created_at
+		`, tid, idemKey, fromID, toID, req.AmountCents).Scan(&createdAt)
 		if err != nil {
 			return err
 		}
@@ -164,7 +166,7 @@ func (h *TransactionsHandler) CreateTransaction(w http.ResponseWriter, r *http.R
 		return nil
 	})
 
-	// Mapeia erros “normais” pra HTTP
+	// Mapeia erros “normais” pra HTTP (FORA da transação!)
 	if err != nil {
 		switch {
 		case errors.Is(err, errAccountNotFound):
@@ -184,7 +186,7 @@ func (h *TransactionsHandler) CreateTransaction(w http.ResponseWriter, r *http.R
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-// helper: tx wrapper (sem depender do seu internal/db, funciona direto com pgxpool)
+// helper: tx wrapper
 func withTx(ctx context.Context, pool interface {
 	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
 }, fn func(pgx.Tx) error) error {
@@ -192,7 +194,7 @@ func withTx(ctx context.Context, pool interface {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = tx.Rollback(context.Background()) }()
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	if err := fn(tx); err != nil {
 		return err
