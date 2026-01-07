@@ -27,6 +27,9 @@ func NewRouter(d Deps) http.Handler {
 	if d.Accounts != nil {
 		r.Get("/health", d.Accounts.Health)
 		r.Get("/healthz", d.Accounts.Health)
+
+		r.Post("/accounts", d.Accounts.CreateAccount)
+		r.Get("/accounts/{id}", d.Accounts.GetAccount)
 	}
 
 	// Readiness (depende de DB)
@@ -37,6 +40,7 @@ func NewRouter(d Deps) http.Handler {
 	// Funcionalidade
 	if d.Accounts != nil {
 		r.Post("/accounts", d.Accounts.CreateAccount)
+		r.Get("/accounts/{id}", d.Accounts.GetAccount)
 	}
 
 	if d.Tx != nil {

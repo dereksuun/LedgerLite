@@ -120,11 +120,12 @@ func (h *TransactionsHandler) CreateTransaction(w http.ResponseWriter, r *http.R
 			return errInsufficientFunds
 		}
 
-		ct, err := tx.Exec(ctx, `
-		UPDATE accounts
-		SET balance_cents = balance_cents - $1
-		WHERE id = $2 AND balance_cents >= $1
-		`, req.AmountCents, fromID)
+		ct, err := tx.Exec(ctx,
+			`UPDATE accounts
+			SET balance_cents = balance_cents - $1
+			WHERE id = $2 AND balance_cents >= $1`,
+			req.AmountCents, fromID,
+		)
 		if err != nil {
 			return err
 		}
