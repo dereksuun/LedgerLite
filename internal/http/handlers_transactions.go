@@ -10,12 +10,11 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type TransactionsHandler struct {
-	DB interface {
-		BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
-	}
+	DB *pgxpool.Pool
 }
 
 type createTransactionReq struct {
