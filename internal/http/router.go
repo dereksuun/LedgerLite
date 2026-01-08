@@ -27,6 +27,9 @@ func NewRouter(d Deps) http.Handler {
 	r.Get("/health", d.Accounts.Health)
 	r.Get("/healthz", d.Accounts.Health)
 
+	// Debug (DEV) - adicionar fundos manualmente
+	r.Post("/debug/accounts/{id}/funds", d.Accounts.DebugFundAccount)
+
 	// Readiness
 	if d.Ready != nil {
 		r.Get("/readyz", d.Ready.Ready)
