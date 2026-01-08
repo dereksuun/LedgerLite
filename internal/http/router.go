@@ -36,6 +36,9 @@ func NewRouter(d Deps) http.Handler {
 	r.Post("/accounts", d.Accounts.CreateAccount)
 	r.Get("/accounts/{id}", d.Accounts.GetAccount) // se você já tem
 
+	//Extrato
+	r.Get("/accounts/{id}/statement", d.Accounts.GetAccountStatement)
+
 	// Transactions
 	if d.Tx != nil {
 		r.Post("/transactions", d.Tx.CreateTransaction)
