@@ -4,14 +4,20 @@ set -euo pipefail
 DB="${DB_NAME:-ledgerlite}"
 USER="${DB_USER:-postgres}"
 SERVICE="${SERVICE:-postgres}"
-SQL="${SQL_FILE:-migrations/001_init.sql}"
 
-if [[ ! -f "$SQL" ]]; then
-  echo "[migrate] arquivo não encontrado: $SQL"
+shopt -s nullglob
+FILES=(migrations/*.sql)
+
+if (( ${#FILES[@]} == 0 )); then
+  echo "[migrate] nenhuma migration encontrada em migrations/*.sql"
   exit 1
 fi
 
-echo "[migrate] rodando migrations em $DB usando $SQL..."
-docker compose exec -T "$SERVICE" psql -U "$USER" -d "$DB" < "$SQL"
+echo "[migrate] rodando ${#FILES[@]} migration(s) em $DB..."
+
+for f in "${FILES[@]}"; do
+  echo "[migrate] -> $(basename "$f")"
+  docker compose exec -T "$SERVICE" psql -U "$USER" -d "$DB" < "$f"
+done
 
 echo "[migrate] ok ✅"
