@@ -44,5 +44,25 @@ fi
 # 6) Subir API + worker via docker compose
 echo "[dev] subindo API e worker..."
 docker compose --profile dev up -d api outbox-worker
+READY_TIMEOUT="${READY_TIMEOUT:-180}" # segundos
+
+echo "[dev] esperando API ficar pronta (timeout: ${READY_TIMEOUT}s)..."
+start="$(date +%s)"
+
+while true; do
+  if curl -fsS "http://localhost:${PORT}/readyz" >/dev/null 2>&1; then
+    echo "[dev] API pronta ✅"
+    break
+  fi
+
+  now="$(date +%s)"
+  if (( now - start >= READY_TIMEOUT )); then
+    echo "[dev] API não ficou pronta em ${READY_TIMEOUT}s. Logs:"
+    docker compose --profile dev logs --tail=200 api outbox-worker
+    exit 1
+  fi
+
+  sleep 1
+done
 
 echo "[dev] ok. use 'make down' para parar tudo"

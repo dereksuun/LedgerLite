@@ -32,8 +32,8 @@ services:
     command: ["go", "run", "./cmd/worker"]
     environment:
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/ledgerlite?sslmode=disable
-      OUTBOX_POLL_INTERVAL: 2s
-      OUTBOX_BATCH_SIZE: 10
+#      OUTBOX_POLL_INTERVAL: 2s
+#      OUTBOX_BATCH_SIZE: 10
     volumes:
       - ./:/app
     depends_on:
