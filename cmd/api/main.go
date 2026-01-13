@@ -28,11 +28,15 @@ func main() {
 	accountsHandler := &httpapi.AccountsHandler{DB: pool}
 	txHandler := &httpapi.TransactionsHandler{DB: pool}
 	readyHandler := &httpapi.ReadyzHandler{DB: pool} // <- aqui estava o bug (era DB: db)
+	metricsHandler := &httpapi.MetricsHandler{DB: pool}
+	adminHandler := &httpapi.AdminHandler{DB: pool}
 
 	router := httpapi.NewRouter(httpapi.Deps{
 		Accounts: accountsHandler,
 		Tx:       txHandler,
 		Ready:    readyHandler,
+		Metrics:  metricsHandler,
+		Admin:    adminHandler,
 	})
 
 	srv := &http.Server{

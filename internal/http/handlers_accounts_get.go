@@ -21,6 +21,12 @@ type getAccountResp struct {
 	CreatedAt    time.Time `json:"created_at"`
 }
 
+type getBalanceResp struct {
+	ID           string `json:"id"`
+	Currency     string `json:"currency"`
+	BalanceCents int64  `json:"balance_cents"`
+}
+
 func (h *AccountsHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimSpace(chi.URLParam(r, "id"))
 	accountID, err := uuid.Parse(idStr)
@@ -62,5 +68,44 @@ func (h *AccountsHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 		Currency:     currency,
 		BalanceCents: balance,
 		CreatedAt:    createdAt,
+	})
+}
+
+func (h *AccountsHandler) GetAccountBalance(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimSpace(chi.URLParam(r, "id"))
+	accountID, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "id must be a valid UUID", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
+
+	var (
+		dbID     uuid.UUID
+		currency string
+		balance  int64
+	)
+
+	err = h.DB.QueryRow(ctx, `
+		SELECT id, currency, balance_cents
+		FROM accounts
+		WHERE id = $1
+	`, accountID).Scan(&dbID, &currency, &balance)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			http.Error(w, "account not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "failed to fetch account balance", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	_ = json.NewEncoder(w).Encode(getBalanceResp{
+		ID:           dbID.String(),
+		Currency:     currency,
+		BalanceCents: balance,
 	})
 }

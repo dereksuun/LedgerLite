@@ -10,7 +10,7 @@ help:
 	@echo "  make logs     -> logs do postgres"
 	@echo "  make migrate  -> roda migrations"
 	@echo "  make api      -> sobe API (precisa DATABASE_URL)"
-	@echo "  make dev      -> sobe tudo (db+migrate+api)"
+	@echo "  make dev      -> sobe tudo (db+migrate+api+worker)"
 	@echo "  make health   -> testa /health (API precisa estar rodando)"
 
 up:

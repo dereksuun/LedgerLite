@@ -11,3 +11,31 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+  api:
+    image: golang:1.22
+    profiles: ["dev"]
+    working_dir: /app
+    command: ["go", "run", "./cmd/api"]
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/ledgerlite?sslmode=disable
+      APP_ENV: dev
+    ports: ["8080:8080"]
+    volumes:
+      - ./:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+  outbox-worker:
+    image: golang:1.22
+    profiles: ["dev"]
+    working_dir: /app
+    command: ["go", "run", "./cmd/worker"]
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/ledgerlite?sslmode=disable
+      OUTBOX_POLL_INTERVAL: 2s
+      OUTBOX_BATCH_SIZE: 10
+    volumes:
+      - ./:/app
+    depends_on:
+      postgres:
+        condition: service_healthy

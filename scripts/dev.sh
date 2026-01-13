@@ -19,8 +19,8 @@ if ! docker info >/dev/null 2>&1; then
 fi
 
 # 2) Subir postgres
-echo "[dev] subindo containers (postgres)..."
-docker compose up -d
+echo "[dev] subindo postgres..."
+docker compose up -d postgres
 
 # 3) Esperar healthy
 TIMEOUT="${TIMEOUT:-60}" scripts/wait-postgres.sh postgres
@@ -41,15 +41,8 @@ if ss -ltn 2>/dev/null | awk '{print $4}' | grep -q ":${PORT}$"; then
   fi
 fi
 
-# 6) Subir API (sem mexer no main.go)
-# Tenta carregar .env se existir; senão exige DATABASE_URL no ambiente.
-if [[ -f .env ]]; then
-  set -a
-  source .env
-  set +a
-fi
+# 6) Subir API + worker via docker compose
+echo "[dev] subindo API e worker..."
+docker compose --profile dev up -d api outbox-worker
 
-: "${DATABASE_URL:?DATABASE_URL não definido. Crie .env com DATABASE_URL=...}"
-
-echo "[dev] subindo API..."
-go run ./cmd/api
+echo "[dev] ok. use 'make down' para parar tudo"
