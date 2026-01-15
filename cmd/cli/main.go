@@ -171,7 +171,7 @@ func runTransfer(args []string) {
 		fail(err)
 	}
 
-	fmt.Printf("transaction: %s from=%s to=%s amount=%d\n", resp.ID, resp.FromAccountID, resp.ToAccountID, resp.AmountCents)
+	fmt.Printf("transaction: %s from=%s to=%s amount=%d idempotency_key: %s\n", resp.ID, resp.FromAccountID, resp.ToAccountID, resp.AmountCents, *idemKey)
 }
 
 func runStatement(args []string) {
@@ -234,7 +234,8 @@ func doJSON(ctx context.Context, method, url string, body any, headers map[strin
 		req.Header.Set(key, value)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}

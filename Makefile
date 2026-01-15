@@ -42,3 +42,9 @@ dev:
 
 health:
 	curl -i http://localhost:8080/health
+
+cli:
+	go build -o bin/ledgerlite ./cmd/cli
+
+cli-win:
+	GOOS=windows GOARCH=amd64 go build -o bin/ledgerlite.exe ./cmd/cli
