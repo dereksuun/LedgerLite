@@ -1,5 +1,2 @@
-ALTER TABLE transactions
-ADD COLUMN IF NOT EXISTS description text NOT NULL DEFAULT '';
-
 ALTER TABLE accounts
 ADD COLUMN IF NOT EXISTS description text NOT NULL DEFAULT '';
