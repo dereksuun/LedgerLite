@@ -32,11 +32,13 @@ func main() {
 
 	logger := log.Default()
 	worker := &outbox.Worker{
-		DB:           pool,
-		Publisher:    &outbox.LoggerPublisher{Logger: logger},
-		BatchSize:    25,
-		PollInterval: 700 * time.Millisecond,
-		Logger:       logger,
+		DB:              pool,
+		Publisher:       &outbox.LoggerPublisher{Logger: logger},
+		BatchSize:       25,
+		PollInterval:    700 * time.Millisecond,
+		LockTimeout:     30 * time.Second,
+		PendingLogEvery: 5 * time.Second,
+		Logger:          logger,
 	}
 
 	logger.Printf("worker: started (interval=%s batch=%d)", worker.PollInterval, worker.BatchSize)

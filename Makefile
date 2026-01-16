@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 PROFILE_DEV := --profile dev
 
-.PHONY: help up down ps logs wait migrate api dev health
+.PHONY: help up down ps logs wait migrate api dev health demo
 
 help:
 	@echo "Alvos:"
@@ -15,6 +15,7 @@ help:
 	@echo "  make api      -> sobe API fora do docker (precisa DATABASE_URL)"
 	@echo "  make dev      -> sobe tudo via scripts/dev.sh"
 	@echo "  make health   -> testa /health (API precisa estar rodando)"
+	@echo "  make demo     -> roda demo (seed + transferencias)"
 
 up:
 	docker compose $(PROFILE_DEV) up -d
@@ -39,6 +40,9 @@ api:
 
 dev:
 	./scripts/dev.sh
+
+demo: dev
+	@./scripts/demo.sh
 
 health:
 	curl -i http://localhost:8080/health
