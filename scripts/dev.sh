@@ -19,8 +19,9 @@ if ! docker info >/dev/null 2>&1; then
 fi
 
 # 2) Subir postgres
-echo "[dev] subindo postgres..."
-docker compose up -d postgres
+echo "[dev] subindo postgres e nats..."
+docker compose --profile dev up -d postgres nats nats-box
+
 
 # 3) Esperar healthy
 TIMEOUT="${TIMEOUT:-60}" scripts/wait-postgres.sh postgres

@@ -11,8 +11,26 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+
+  nats:
+    image: nats:2.9
+    command: ["-c", "/etc/nats/nats-server.conf"]
+    ports:
+      - "4222:4222"   # client
+      - "8222:8222"   # monitoring
+    volumes:
+      - ./nats-server.conf:/etc/nats/nats-server.conf:ro
+      - nats_data:/data
+  
+  nats-box:
+    image: natsio/nats-box:latest
+    profiles: ["dev"]
+    command: ["sleep", "infinity"]
+    depends_on:
+      - nats
+
   api:
-    image: golang:1.22
+    image: golang:1.23
     profiles: ["dev"]
     working_dir: /app
     command: ["go", "run", "./cmd/api"]
@@ -25,17 +43,24 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+
   outbox-worker:
-    image: golang:1.22
+    image: golang:1.23
     profiles: ["dev"]
     working_dir: /app
     command: ["go", "run", "./cmd/worker"]
     environment:
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/ledgerlite?sslmode=disable
-#      OUTBOX_POLL_INTERVAL: 2s
-#      OUTBOX_BATCH_SIZE: 10
+      NATS_URL: nats://nats:4222
+      OUTBOX_POLL_INTERVAL: 2s
+      OUTBOX_BATCH_SIZE: 10
     volumes:
       - ./:/app
     depends_on:
       postgres:
         condition: service_healthy
+      nats:
+        condition: service_started
+
+volumes:
+  nats_data:
