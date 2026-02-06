@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LedgerLite Desktop</title>
+  <style>
+    :root {
+      --bg-0: #0d1b1e;
+      --bg-1: #13272b;
+      --bg-2: #1b3940;
+      --card: #f4f3ef;
+      --card-2: #ece9df;
+      --ink: #172328;
+      --ink-soft: #51686f;
+      --accent: #0f9d8f;
+      --accent-2: #ed8f03;
+      --danger: #b3373d;
+      --ok: #1f7a42;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "IBM Plex Sans", "Noto Sans", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at 0% 0%, #225761 0%, transparent 60%),
+        radial-gradient(1000px 500px at 100% 100%, #5d2c11 0%, transparent 65%),
+        linear-gradient(145deg, var(--bg-0), var(--bg-1) 45%, var(--bg-2));
+      padding: 24px;
+    }
+
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: grid;
+      gap: 14px;
+    }
+
+    .title {
+      color: #f8fbfb;
+      font-size: clamp(24px, 4vw, 34px);
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: 0.01em;
+    }
+
+    .subtitle {
+      color: #c8dbde;
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .card {
+      background: linear-gradient(170deg, var(--card), var(--card-2));
+      border: 1px solid rgba(23, 35, 40, 0.12);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      padding: 14px;
+      animation: rise 220ms ease-out both;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .row {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(12, 1fr);
+      align-items: end;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field > label {
+      font-size: 12px;
+      color: var(--ink-soft);
+      font-weight: 600;
+    }
+
+    .field[data-col="2"] { grid-column: span 2; }
+    .field[data-col="3"] { grid-column: span 3; }
+    .field[data-col="4"] { grid-column: span 4; }
+    .field[data-col="6"] { grid-column: span 6; }
+    .field[data-col="8"] { grid-column: span 8; }
+    .field[data-col="12"] { grid-column: span 12; }
+
+    input, textarea, button {
+      font: inherit;
+      border-radius: 10px;
+      border: 1px solid rgba(23, 35, 40, 0.2);
+      outline: none;
+      transition: 120ms ease;
+    }
+
+    input, textarea {
+      background: #fff;
+      color: #1e2a2f;
+      padding: 10px 12px;
+      width: 100%;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 157, 143, 0.16);
+    }
+
+    button {
+      cursor: pointer;
+      padding: 10px 12px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      background: linear-gradient(130deg, var(--accent), #0b786d);
+      color: #ecf7f6;
+      border-color: transparent;
+    }
+
+    button.secondary {
+      background: linear-gradient(130deg, var(--accent-2), #b86c06);
+      color: #fff4e2;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .card-title {
+      margin: 0 0 10px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .status {
+      font-weight: 700;
+      font-size: 13px;
+      color: #f7fdfc;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(15, 157, 143, 0.18);
+      border: 1px solid rgba(15, 157, 143, 0.4);
+    }
+
+    .status.error {
+      background: rgba(179, 55, 61, 0.18);
+      border-color: rgba(179, 55, 61, 0.42);
+      color: #ffd8db;
+    }
+
+    .status.ok {
+      background: rgba(31, 122, 66, 0.2);
+      border-color: rgba(31, 122, 66, 0.45);
+      color: #dcffe9;
+    }
+
+    pre {
+      margin: 0;
+      padding: 14px;
+      min-height: 240px;
+      max-height: 540px;
+      overflow: auto;
+      white-space: pre-wrap;
+      background: #0f191d;
+      color: #d8f1ea;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-family: "IBM Plex Mono", "DejaVu Sans Mono", monospace;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 900px) {
+      .field[data-col="2"],
+      .field[data-col="3"],
+      .field[data-col="4"],
+      .field[data-col="6"],
+      .field[data-col="8"] {
+        grid-column: span 12;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <h1 class="title">LedgerLite Desktop</h1>
+      <p class="subtitle">Linux test UI via local proxy (no CORS issue).</p>
+    </header>
+
+    <section class="card">
+      <div class="row">
+        <div class="field" data-col="8">
+          <label for="api_url">API URL</label>
+          <input id="api_url" value="http://localhost:8080">
+        </div>
+        <div class="field" data-col="2">
+          <button id="btn_health">Health</button>
+        </div>
+        <div class="field" data-col="2">
+          <button id="btn_clear" class="secondary">Clear Output</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">Accounts</h2>
+      <div class="row">
+        <div class="field" data-col="6">
+          <label for="create_name">Name</label>
+          <input id="create_name" placeholder="Alice">
+        </div>
+        <div class="field" data-col="3">
+          <button id="btn_create_account">Create Account</button>
+        </div>
+      </div>
+      <div class="row" style="margin-top: 10px;">
+        <div class="field" data-col="3">
+          <label for="list_limit">List Limit</label>
+          <input id="list_limit" value="50">
+        </div>
+        <div class="field" data-col="6">
+          <label for="list_cursor">Cursor (optional)</label>
+          <input id="list_cursor">
+        </div>
+        <div class="field" data-col="3">
+          <button id="btn_list_accounts">List Accounts</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">Transfer</h2>
+      <div class="row">
+        <div class="field" data-col="6">
+          <label for="transfer_from">From Account ID</label>
+          <input id="transfer_from">
+        </div>
+        <div class="field" data-col="6">
+          <label for="transfer_to">To Account ID</label>
+          <input id="transfer_to">
+        </div>
+      </div>
+      <div class="row" style="margin-top: 10px;">
+        <div class="field" data-col="3">
+          <label for="transfer_amount">Amount (cents)</label>
+          <input id="transfer_amount" value="100">
+        </div>
+        <div class="field" data-col="9">
+          <label for="transfer_desc">Description</label>
+          <input id="transfer_desc" placeholder="demo transfer">
+        </div>
+      </div>
+      <div class="row" style="margin-top: 10px;">
+        <div class="field" data-col="9">
+          <label for="transfer_idem">Idempotency Key (optional)</label>
+          <input id="transfer_idem">
+        </div>
+        <div class="field" data-col="3">
+          <button id="btn_transfer">Transfer</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">Statement</h2>
+      <div class="row">
+        <div class="field" data-col="8">
+          <label for="statement_account">Account ID</label>
+          <input id="statement_account">
+        </div>
+        <div class="field" data-col="2">
+          <label for="statement_limit">Limit</label>
+          <input id="statement_limit" value="50">
+        </div>
+        <div class="field" data-col="2">
+          <button id="btn_statement">Load Statement</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="status" class="status">Ready.</div>
+
+    <section class="card">
+      <h2 class="card-title">Output</h2>
+      <pre id="output"></pre>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function setStatus(msg, kind = "") {
+      const el = $("status");
+      el.textContent = msg;
+      el.classList.remove("error", "ok");
+      if (kind) el.classList.add(kind);
+    }
+
+    function appendOutput(title, body) {
+      const ts = new Date().toISOString().replace("T", " ").replace("Z", "");
+      const out = $("output");
+      out.textContent = `[${ts}] ${title}\n${body}\n\n` + out.textContent;
+    }
+
+    function apiURL() {
+      const raw = $("api_url").value.trim();
+      return (raw || "http://localhost:8080").replace(/\/+$/, "");
+    }
+
+    function prettyText(s) {
+      if (!s || !s.trim()) return "(empty body)";
+      try {
+        return JSON.stringify(JSON.parse(s), null, 2);
+      } catch {
+        return s;
+      }
+    }
+
+    function generateUUID() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    async function rpc({ method, path, body, headers = {} }) {
+      const resp = await fetch("/rpc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          api_url: apiURL(),
+          method,
+          path,
+          headers,
+          body
+        })
+      });
+      return resp.json();
+    }
+
+    async function runAction(title, fn) {
+      setStatus(`${title} ...`);
+      try {
+        const data = await fn();
+        if (data.error) {
+          appendOutput(`${title} (error ${data.status ?? "?"})`, data.error);
+          setStatus(`${title} failed`, "error");
+          return;
+        }
+        const pretty = prettyText(data.body || "");
+        appendOutput(`${title} (HTTP ${data.status})`, pretty);
+        setStatus(`${title} ok`, "ok");
+      } catch (err) {
+        appendOutput(`${title} (client error)`, String(err));
+        setStatus(`${title} failed`, "error");
+      }
+    }
+
+    $("btn_clear").addEventListener("click", () => {
+      $("output").textContent = "";
+      setStatus("Output cleared.");
+    });
+
+    $("btn_health").addEventListener("click", () =>
+      runAction("GET /health", () =>
+        rpc({ method: "GET", path: "/health" })
+      )
+    );
+
+    $("btn_create_account").addEventListener("click", () => {
+      const name = $("create_name").value.trim();
+      if (!name) {
+        setStatus("Name is required.", "error");
+        return;
+      }
+      runAction("POST /accounts", () =>
+        rpc({
+          method: "POST",
+          path: "/accounts",
+          body: { name }
+        })
+      );
+    });
+
+    $("btn_list_accounts").addEventListener("click", () => {
+      const limit = ($("list_limit").value || "50").trim();
+      const cursor = $("list_cursor").value.trim();
+      const params = new URLSearchParams({ limit });
+      if (cursor) params.set("cursor", cursor);
+      runAction("GET /accounts", () =>
+        rpc({
+          method: "GET",
+          path: `/accounts?${params.toString()}`
+        })
+      );
+    });
+
+    $("btn_transfer").addEventListener("click", () => {
+      const from = $("transfer_from").value.trim();
+      const to = $("transfer_to").value.trim();
+      const amount = Number(($("transfer_amount").value || "").trim());
+      if (!from || !to || !Number.isFinite(amount) || amount <= 0) {
+        setStatus("Transfer requires from/to and positive amount.", "error");
+        return;
+      }
+
+      let idem = $("transfer_idem").value.trim();
+      if (!idem) {
+        idem = generateUUID();
+        $("transfer_idem").value = idem;
+      }
+
+      runAction("POST /transactions", () =>
+        rpc({
+          method: "POST",
+          path: "/transactions",
+          headers: { "Idempotency-Key": idem },
+          body: {
+            from_account_id: from,
+            to_account_id: to,
+            amount_cents: Math.floor(amount),
+            description: $("transfer_desc").value.trim()
+          }
+        })
+      );
+    });
+
+    $("btn_statement").addEventListener("click", () => {
+      const id = $("statement_account").value.trim();
+      if (!id) {
+        setStatus("Account ID is required for statement.", "error");
+        return;
+      }
+      const limit = ($("statement_limit").value || "50").trim();
+      const params = new URLSearchParams({ limit });
+      runAction("GET /accounts/{id}/statement", () =>
+        rpc({
+          method: "GET",
+          path: `/accounts/${id}/statement?${params.toString()}`
+        })
+      );
+    });
+  </script>
+</body>
+</html>

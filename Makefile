@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 PROFILE_DEV := --profile dev
 
-.PHONY: help up down ps logs wait migrate api dev health demo
+.PHONY: help up down ps logs wait migrate api dev health demo cli cli-win gui gui-win
 
 help:
 	@echo "Alvos:"
@@ -16,6 +16,8 @@ help:
 	@echo "  make dev      -> sobe tudo via scripts/dev.sh"
 	@echo "  make health   -> testa /health (API precisa estar rodando)"
 	@echo "  make demo     -> roda demo (seed + transferencias)"
+	@echo "  make gui      -> build GUI para SO atual"
+	@echo "  make gui-win  -> build GUI .exe (Windows amd64)"
 
 up:
 	docker compose $(PROFILE_DEV) up -d
@@ -52,3 +54,9 @@ cli:
 
 cli-win:
 	GOOS=windows GOARCH=amd64 go build -o bin/ledgerlite.exe ./cmd/cli
+
+gui:
+	go build -o bin/ledgerlite-gui ./cmd/gui
+
+gui-win:
+	GOOS=windows GOARCH=amd64 go build -o bin/ledgerlite-gui.exe ./cmd/gui
